@@ -21,6 +21,7 @@ import HeaderCustom from './header';
 import RNPickerSelect from 'react-native-picker-select';
 import ImagePicker from 'react-native-image-picker';
 import IconFont from 'react-native-vector-icons/FontAwesome';
+
 export default function Formulario() {
     const [fotoUrl, setFotoUrl] = useState('');
     foto = async () => {
@@ -29,8 +30,8 @@ export default function Formulario() {
             storageOptions: {
                 skipBackup: true,
                 path: 'images',
-                takePhotoButtonTitle:'Tomar una foto',
-                chooseFromLibraryButtonTitle:'Elegir desde la galería'
+                takePhotoButtonTitle: 'Tomar una foto',
+                chooseFromLibraryButtonTitle: 'Elegir desde la galería'
             },
         };
         console.log("PRESIONADO");
@@ -46,24 +47,72 @@ export default function Formulario() {
             } else if (response.customButton) {
                 console.log('User tapped custom button: ', response.customButton);
             } else {
-                const source = { uri: response.uri };
+                const source = { uri: response.uri  , nombre : response.fileName};
 
                 // You can also display the image using data:
                 // const source = { uri: 'data:image/jpeg;base64,' + response.data };
 
 
                 setFotoUrl(source);
+                // Send(source.uri);
+                setFotoUri(source.uri);
+                setNombreFoto(source.nombre);
+                // subirImagen(source);
+                // subirImagen = async (source) => {
+                // let base_url = 'http://grupohexxa.cl/inmobiliaria/imagen.php';
+                // let uploadData = new FormData();
+                // uploadData.append('submit','ok');
+                // uploadData.append('file',{type:'image/jpg',uri:source,name:'uploadimagetmp.jpg' });
+                // fetch(base_url,{
+                //     method:'post',
+                //     body:uploadData
+                // }).then(response => response.json())
+                // .then(response => {
+                //     if(response.status){
+                //         console.log("Subido");
+                //     }else {
+                //         console.log("ERROR");
+                //     }   
+                // })
+                // }
 
             }
         });
     }
+    //  Send = async (source) => {
+    //     let url = "https://grupohexxa.cl/inmobiliaria/app.php";
+    //     let UplodedFile = new FormData();
+    //     console.log(url)
+    //     UplodedFile.append('casa', selectCasa)
+    //     UplodedFile.append('recinto', selectRecinto)
+    //     UplodedFile.append('observacion', observationText)
+    //     UplodedFile.append('estado', selectEstado)
+    //     UplodedFile.append('submit', 'ok');
+    //     UplodedFile.append('imagen', { type: 'image/jpg', uri: source, name: 'asdasd.jpg' });
+    //     fetch(url, {
+    //         method: 'POST',
+    //         body: UplodedFile
+    //     }).then(response => response.json())
+    //       .then(response => {
+
+    //             console.log(
+    //                 "POST Response",
+    //                 "Response Body -> " + JSON.stringify(response)
+    //             )
+    //         }).catch((err) => {
+    //             console.log(err);
+    //         })
+
+
+    // }
+
     /* VALORES DE INPUT, INCIADOS */
     const [selectCasa, selectCasaSelected] = useState("Seleccione Casa");
     const [selectRecinto, selectRecintoSelected] = useState("Seleccione Recinto");
     const [selectEstado, selectEstadoSelected] = useState("Seleccione Estado");
     const [observationText, setObservation] = useState('');
-
-
+    const [fotoUri, setFotoUri] = useState('');
+    const [nombreFoto, setNombreFoto] = useState('');
     const netInfo = useNetInfo();
     /* Toast o Mensajes*/
     const toastFormularioAgregado = () => {
@@ -115,7 +164,7 @@ export default function Formulario() {
 
     const obtenerData = async () => {
         try {
-            const casa = await AsyncStorage.getItem('somekey');
+            const casa = await AsyncStorage.getItem('registro_vivienda');
             console.log("DATA " + casa);
         } catch (e) {
             // saving error
@@ -124,7 +173,7 @@ export default function Formulario() {
 
     const eliminarDatos = async () => {
         try {
-            await AsyncStorage.removeItem('somekey');
+            await AsyncStorage.removeItem('registro_vivienda');
             console.log("Eliminado");
         } catch (e) {
             console.log(e);
@@ -136,7 +185,7 @@ export default function Formulario() {
         try {
             /* Guardar Datos de manera local */
             const formularioArray = [selectCasa, selectRecinto, observationText];
-            await AsyncStorage.setItem('somekey', JSON.stringify(formularioArray));
+            await AsyncStorage.setItem('registro_vivienda', JSON.stringify(formularioArray));
             console.log("Agregado");
         } catch (e) {
             console.log(e);
@@ -149,37 +198,30 @@ export default function Formulario() {
 
 
     enviarFomulario = async () => {
-        obtenerData();
-        let formData = new FormData();
-        formData.append('casa', selectCasa)
-        formData.append('recinto', selectRecinto)
-        formData.append('observacion', observationText)
-        formData.append('estado', selectEstado)
-        formData.append('file', {type:'image/jpg', uri:fotoUrl,name:'imagen'})
-        console.log("APRETADO");
-        /* Verificar que haya Internet */
-
         if (netInfo.isConnected.toString() === "true") {
             toast();
-
-            /* Enviar POST */
-            fetch('http://grupohexxa.cl/inmobiliaria/app.php', {
+            let url = "https://grupohexxa.cl/inmobiliaria/app.php";
+            let UplodedFile = new FormData();
+            console.log(url)
+            UplodedFile.append('casa', selectCasa)
+            UplodedFile.append('recinto', selectRecinto)
+            UplodedFile.append('observacion', observationText)
+            UplodedFile.append('estado', selectEstado)
+            UplodedFile.append('submit', 'ok');
+            UplodedFile.append('imagen', { type: 'image/jpg', uri: fotoUri, name: nombreFoto });
+            fetch(url, {
                 method: 'POST',
-                body: formData
-            }).then((response) => response.json())
-                .then((responseData) => {
-                    if (JSON.stringify(responseData) == 1) {
-                        toastFormularioAgregado();
-                    } else {
+                body: UplodedFile
+            }).then(response => response.json())
+                .then(response => {
 
-                    }
                     console.log(
                         "POST Response",
-                        "Response Body -> " + JSON.stringify(responseData)
+                        "Response Body -> " + JSON.stringify(response)
                     )
+                }).catch((err) => {
+                    console.log(err);
                 })
-                .done();
-
         } else {
             // toastDesconexion();
             alertaConexion();
@@ -305,9 +347,11 @@ export default function Formulario() {
                                 <Image source={fotoUrl} style={styles.fotografia} />
                         }
                     </Form>
+                    {/* <Button primary onPress={Send}><Text>Subir Imagen</Text></Button> */}
                     <Button onPress={enviarFomulario} style={styles.botonAgregar} rounded primary>
                         <Text style={styles.textAgregar}>Guardar</Text>
                     </Button>
+
                     {/* <Button onPress={eliminarDatos} style={styles.botonAgregar} rounded primary>
                 <Text style={styles.textAgregar}>Eliminar</Text>
             </Button> */}

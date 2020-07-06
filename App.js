@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, Image,StyleSheet } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
 import { createAppContainer } from 'react-navigation';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { Container, Header, Title, Button, Left, Right, Body, Icon, Text, Form } from 'native-base';
 import { createStackNavigator } from 'react-navigation-stack';
 
 import Formulario from './componentes/formularioVivienda';
-import consultar from './componentes/consultarVivienda';
+import Consultar from './componentes/consultarVivienda';
 import HeaderCustom from './componentes/header';
 import IconFont from 'react-native-vector-icons/FontAwesome';
+import IconFeather from 'react-native-vector-icons/Feather';
 import ImagePicker from 'react-native-image-picker';
 class InicioPantalla extends React.Component {
 
@@ -61,13 +62,13 @@ class InicioPantalla extends React.Component {
     return (
 
 
-      <View style={{ flex: 1}}>
+      <View style={{ flex: 1 }}>
         <HeaderCustom tituloHeader="Inicio" esInicio={true} navigation={this.props.navigation} ></HeaderCustom>
         <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-          <Button style={{marginTop:10}} light onPress={() => this.props.navigation.navigate('Formulario')}><Text>Agregar Entrega</Text><IconFont name="plus" style={{marginRight:10}} size={20}></IconFont></Button>
+          <Button style={{ marginTop: 10 }} light onPress={() => this.props.navigation.navigate('Formulario')}><Text>Agregar Entrega</Text><IconFont name="plus" style={{ marginRight: 10 }} size={20}></IconFont></Button>
         </View>
         {/* <Formulario></Formulario> */}
-      
+
       </View>
 
     );
@@ -94,9 +95,9 @@ class ConsultarViviendaPantalla extends React.Component {
 
       <View>
         <HeaderCustom tituloHeader="Consultar" esInicio={true}></HeaderCustom>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text>Consultar</Text>
-        </View>
+        {/* <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}> */}
+          <Consultar></Consultar>
+        {/* </View> */}
       </View>
     );
   }
@@ -128,7 +129,7 @@ const ConsultaStack = createStackNavigator({
     navigationOptions: navOptionHandler
   },
   Consultar: {
-    screen: consultar,
+    screen: Consultar,
     navigationOptions: navOptionHandler
   }
 })
@@ -141,8 +142,20 @@ const TabNavigator = createBottomTabNavigator({
     navigationOptions: {
       tabBarLabel: 'Inicio',
       tabBarIcon: ({ tintColor }) => (
-        <IconFont name="home" size={30} ></IconFont>
-      )
+        <IconFeather name="home" size={30} ></IconFeather>
+      ),
+      tabBarOptions: {
+        activeTintColor: 'black',
+        labelStyle: {
+          fontSize: 13,
+
+        },
+        style: {
+          backgroundColor: 'white',
+          color: 'white',
+
+        },
+      }
     }
   },
   Consultar: {
@@ -150,8 +163,19 @@ const TabNavigator = createBottomTabNavigator({
     navigationOptions: {
       tabBarLabel: 'Consultar',
       tabBarIcon: ({ tintColor }) => (
-        <IconFont name="search" size={30} ></IconFont>
-      )
+        <IconFeather name="search" size={30} ></IconFeather>
+      ), tabBarOptions: {
+        activeTintColor: 'black',
+        labelStyle: {
+          fontSize: 13,
+
+        },
+        style: {
+          backgroundColor: 'white',
+          color: 'white',
+
+        },
+      }
     }
   },
   Ajustes: {
@@ -160,7 +184,18 @@ const TabNavigator = createBottomTabNavigator({
       tabBarLabel: 'Ajustes',
       tabBarIcon: ({ tintColor }) => (
         <IconFont name="cog" size={30} ></IconFont>
-      )
+      ), tabBarOptions: {
+        activeTintColor: 'black',
+        labelStyle: {
+          fontSize: 13,
+
+        },
+        style: {
+          backgroundColor: 'white',
+          color: 'white',
+
+        },
+      }
     }
   },
 });
