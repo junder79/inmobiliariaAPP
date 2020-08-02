@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Image, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Image, StyleSheet, RefreshControl } from 'react-native';
 import { createAppContainer } from 'react-navigation';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { Container, Header, Title, Button, Left, Right, Body, Icon, Text, Form } from 'native-base';
@@ -11,69 +11,83 @@ import HeaderCustom from './componentes/header';
 import IconFont from 'react-native-vector-icons/FontAwesome';
 import IconFeather from 'react-native-vector-icons/Feather';
 import ImagePicker from 'react-native-image-picker';
-class InicioPantalla extends React.Component {
-
-
-  // foto = async () => {
-  //   const options = {
-  //     title: 'Select Avatar',
-  //     customButtons: [{ name: 'fb', title: 'Choose Photo from Facebook' }],
-  //     storageOptions: {
-  //       skipBackup: true,
-  //       path: 'images',
-  //     },
-  //   };
-  //   console.log("PRESIONADO");
-  //   // ImagePicker.launchCamera(options, (response) => {
-  //   //   // Same code as in above section!
-  //   // });
-  //   // ImagePicker.launchImageLibrary(options, response => {
-  //   //   // Same code as in above section!
-  //   //   console.log("IMAGEN " + response);
-  //   //   if (response.url) {
-  //   //     this.setState({ photo: response });
-  //   //   }
-  //   // });
-  //   // Open Image Library:
-
-  //   ImagePicker.showImagePicker(options, (response) => {
-  //     console.log('Response = ', response);
-
-  //     if (response.didCancel) {
-  //       console.log('User cancelled image picker');
-  //     } else if (response.error) {
-  //       console.log('ImagePicker Error: ', response.error);
-  //     } else if (response.customButton) {
-  //       console.log('User tapped custom button: ', response.customButton);
-  //     } else {
-  //       const source = { uri: response.uri };
-
-  //       // You can also display the image using data:
-  //       // const source = { uri: 'data:image/jpeg;base64,' + response.data };
-
-  //       this.setState({
-  //         avatarSource: source,
-  //       });
-  //     }
-  //   });
-  // }
-  render() {
-
-    return (
-
-
-      <View style={{ flex: 1 }}>
-        <HeaderCustom tituloHeader="Inicio" esInicio={true} navigation={this.props.navigation} ></HeaderCustom>
-        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-          <Button style={{ marginTop: 10 }} light onPress={() => this.props.navigation.navigate('Formulario')}><Text>Agregar Entrega</Text><IconFont name="plus" style={{ marginRight: 10 }} size={20}></IconFont></Button>
-        </View>
-        {/* <Formulario></Formulario> */}
-
-      </View>
-
-    );
-  }
+import AsyncStorage from '@react-native-community/async-storage';
+import { ScrollView } from 'react-native-gesture-handler';
+const wait = (timeout) => {
+  return new Promise(resolve => {
+    setTimeout(resolve, timeout);
+  });
 }
+
+function InicioPantalla({ navigation }) {
+
+  const [registros, setRegistros] = useState([]);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+
+    wait(2000).then(() => setRefreshing(false));
+  }, []);
+
+  useEffect(() => {
+    const obtenerData = async () => {
+      try {
+        const registroStorage = await AsyncStorage.getItem('registroAsync');
+        console.log(registroStorage)
+        if (registroStorage) {
+          setRegistros(JSON.parse(registroStorage));
+        }
+      } catch (e) {
+        // saving error
+      }
+    }
+    obtenerData();
+  }, []);
+
+  return (
+
+
+    <View style={{ flex: 1 }}>
+      <HeaderCustom tituloHeader="Inicio" esInicio={true} /*  navigation={this.props.navigation} */ ></HeaderCustom>
+      <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <Button style={{ marginTop: 10 }} light onPress={() => navigation.navigate('Formulario')}  ><Text>Agregar Entrega</Text><IconFont name="plus" style={{ marginRight: 10 }} size={20}></IconFont></Button>
+      </View>
+      <View>
+        {/* <Button style={{ marginTop: 10 }} light><Text>Obtener Data</Text><IconFont name="plus" style={{ marginRight: 10 }} size={20}></IconFont></Button> */}
+      </View>
+      <ScrollView refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }>
+        {registros.map(registro => (
+          <View style={styles.registroAsyn}>
+            
+              <Text style={styles.label}>Casa:</Text>
+              <Text>{registro.selectCasa}</Text>
+            
+            
+              <Text style={styles.label}>Recinto:</Text>
+              <Text>{registro.selectRecinto}</Text>
+            
+           
+              <Text style={styles.label}>Observación:</Text>
+              <Text>{registro.observationText}</Text>
+            
+           
+              <Text style={styles.label}>Estado:</Text>
+              <Text>{registro.selectEstado}
+              </Text>
+           
+          </View>
+        ))}
+      </ScrollView>
+
+
+    </View>
+
+  );
+}
+
 
 class AjustesPantalla extends React.Component {
   render() {
@@ -96,7 +110,7 @@ class ConsultarViviendaPantalla extends React.Component {
       <View>
         <HeaderCustom tituloHeader="Consultar" esInicio={true}></HeaderCustom>
         {/* <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}> */}
-          <Consultar></Consultar>
+        <Consultar></Consultar>
         {/* </View> */}
       </View>
     );
@@ -200,4 +214,22 @@ const TabNavigator = createBottomTabNavigator({
   },
 });
 
+const styles =  StyleSheet.create({
+  registroAsyn:{
+    backgroundColor:'#fff',
+    marginBottom:10,
+    borderBottomColor:'#e1e1e1',
+    borderBottomWidth:1,
+    paddingVertical:20,
+    paddingRight:10,
+    paddingLeft:10,
+    marginTop:10
+  },
+  label:{
+    fontWeight:'bold',
+  },
+  text:{
+
+  }
+})
 export default createAppContainer(TabNavigator);

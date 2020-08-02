@@ -47,7 +47,7 @@ export default function Formulario() {
             } else if (response.customButton) {
                 console.log('User tapped custom button: ', response.customButton);
             } else {
-                const source = { uri: response.uri  , nombre : response.fileName};
+                const source = { uri: response.uri, nombre: response.fileName };
 
                 // You can also display the image using data:
                 // const source = { uri: 'data:image/jpeg;base64,' + response.data };
@@ -57,54 +57,12 @@ export default function Formulario() {
                 // Send(source.uri);
                 setFotoUri(source.uri);
                 setNombreFoto(source.nombre);
-                // subirImagen(source);
-                // subirImagen = async (source) => {
-                // let base_url = 'http://grupohexxa.cl/inmobiliaria/imagen.php';
-                // let uploadData = new FormData();
-                // uploadData.append('submit','ok');
-                // uploadData.append('file',{type:'image/jpg',uri:source,name:'uploadimagetmp.jpg' });
-                // fetch(base_url,{
-                //     method:'post',
-                //     body:uploadData
-                // }).then(response => response.json())
-                // .then(response => {
-                //     if(response.status){
-                //         console.log("Subido");
-                //     }else {
-                //         console.log("ERROR");
-                //     }   
-                // })
-                // }
+           
 
             }
         });
     }
-    //  Send = async (source) => {
-    //     let url = "https://grupohexxa.cl/inmobiliaria/app.php";
-    //     let UplodedFile = new FormData();
-    //     console.log(url)
-    //     UplodedFile.append('casa', selectCasa)
-    //     UplodedFile.append('recinto', selectRecinto)
-    //     UplodedFile.append('observacion', observationText)
-    //     UplodedFile.append('estado', selectEstado)
-    //     UplodedFile.append('submit', 'ok');
-    //     UplodedFile.append('imagen', { type: 'image/jpg', uri: source, name: 'asdasd.jpg' });
-    //     fetch(url, {
-    //         method: 'POST',
-    //         body: UplodedFile
-    //     }).then(response => response.json())
-    //       .then(response => {
 
-    //             console.log(
-    //                 "POST Response",
-    //                 "Response Body -> " + JSON.stringify(response)
-    //             )
-    //         }).catch((err) => {
-    //             console.log(err);
-    //         })
-
-
-    // }
 
     /* VALORES DE INPUT, INCIADOS */
     const [selectCasa, selectCasaSelected] = useState("Seleccione Casa");
@@ -113,6 +71,9 @@ export default function Formulario() {
     const [observationText, setObservation] = useState('');
     const [fotoUri, setFotoUri] = useState('');
     const [nombreFoto, setNombreFoto] = useState('');
+
+    const [registroArray, setRegistroArray] = useState([]);
+
     const netInfo = useNetInfo();
     /* Toast o Mensajes*/
     const toastFormularioAgregado = () => {
@@ -136,44 +97,45 @@ export default function Formulario() {
     };
 
 
-    const alertaConexion = () =>
-        Alert.alert(
-            "SIN CONEXION",
-            "¿Deseas Guardar?, se guardará de forma local",
-            [
-                {
-                    text: "Cancel",
-                    onPress: () => eliminarDatos(),
-                    style: "cancel"
+    // const alertaConexion = () =>
+    //     Alert.alert(
+    //         "SIN CONEXION",
+    //         "¿Deseas Guardar?, se guardará de forma local",
+    //         [
+    //             {
+    //                 text: "Cancel",
+    //                 onPress: () => eliminarDatos(),
+    //                 style: "cancel"
 
-                },
-                { text: "OK", onPress: () => [guardarStorage(), toastGuardado()] }
-            ],
-            { cancelable: false }
-        );
+    //             },
+    //             { text: "OK", onPress: () => [guardarStorage(), toastGuardado()] }
+    //         ],
+    //         { cancelable: false }
+    //     );
 
 
     /* Mostrar los datos del Storage */
 
     useEffect(() => {
+        const obtenerData = async () => {
+            try {
+                const registroStorage = await AsyncStorage.getItem('registroAsync');
+                
+            } catch (e) {
+                // saving error
+            }
+        }
         obtenerData();
 
     }, []);
 
 
 
-    const obtenerData = async () => {
-        try {
-            const casa = await AsyncStorage.getItem('registro_vivienda');
-            console.log("DATA " + casa);
-        } catch (e) {
-            // saving error
-        }
-    }
+
 
     const eliminarDatos = async () => {
         try {
-            await AsyncStorage.removeItem('registro_vivienda');
+            await AsyncStorage.removeItem('registroAsync');
             console.log("Eliminado");
         } catch (e) {
             console.log(e);
@@ -181,11 +143,11 @@ export default function Formulario() {
         }
     }
 
-    const guardarStorage = async () => {
+    const guardarStorage = async (registroJson) => {
         try {
             /* Guardar Datos de manera local */
-            const formularioArray = [selectCasa, selectRecinto, observationText];
-            await AsyncStorage.setItem('registro_vivienda', JSON.stringify(formularioArray));
+            // const formularioArray = [selectCasa, selectRecinto, observationText];
+            await AsyncStorage.setItem('registroAsync', registroJson);
             console.log("Agregado");
         } catch (e) {
             console.log(e);
@@ -223,8 +185,18 @@ export default function Formulario() {
                     console.log(err);
                 })
         } else {
-            // toastDesconexion();
-            alertaConexion();
+            toastDesconexion();
+            
+            /* Se crea un objeto donde almaceno el registro  */
+
+            const registroVivienda = { selectCasa, selectRecinto, observationText, selectEstado }
+
+            // Agregar el registro al state 
+            const registroNuevo = [...registroArray, registroVivienda];
+            setRegistroArray(registroNuevo);
+            guardarStorage(JSON.stringify(registroNuevo));
+            // navigation.navigate('Inicio');
+            // alertaConexion();
         }
 
     }
