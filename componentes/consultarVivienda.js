@@ -10,12 +10,15 @@ import {
     TextInput,
     ToastAndroid,
     Alert,
-    Image
+    Image,
+    ActivityIndicator,
+    FlatList
 
 } from 'react-native';
 import ImagePicker from 'react-native-image-picker';
 import { useNetInfo } from "@react-native-community/netinfo";
 import IconFeather from 'react-native-vector-icons/Feather';
+
 function Consultar() {
     const [selectCasa, selectCasaSelected] = useState("Seleccione Casa");
     const netInfo = useNetInfo();
@@ -24,7 +27,34 @@ function Consultar() {
         selectCasaSelected(valorPicker);
         console.log("Haciendo get" + valorPicker);
         /* Se Realizar Fecth */
+        let inmueble = valorPicker;
+        setCargaData(false);
+        fetch('https://grupohexxa.cl/inmobiliaria/getDetalleVivienda.php?inmueble=' + inmueble)
+            .then((response) => response.json())
+            .then((responseJson) => {
+                console.log(responseJson);
+                setCargaData(false);
+                setInmuebles(responseJson);
+            })
+            .catch((error) => {
+                console.log(error)
+            });
+
     }
+
+
+    const [inmuebles, setInmuebles] = useState([]);
+    const [cargaData, setCargaData] = useState(true);
+
+    function dataEncontrada() {
+        return (
+            <View>
+                <Text>Hola</Text>
+            </View>
+        )
+    }
+
+
     return (
         <View>
             {
@@ -47,10 +77,16 @@ function Consultar() {
                             <Picker.Item label="3D 8 Santorini" value="3D_8_Santorini" />
                             <Picker.Item label="3D 9 Mallorca" value="3D_9_Mallorca" />
                         </Picker>
-                       
+                        { 
+
+                        cargaData == false?
+                        <ActivityIndicator size="large" />:
+                        <Text>Es true</Text>
+                    
+                        }
                     </View> :
-                    <View style={{marginTop:100 ,justifyContent:'center',alignItems:'center',alignContent:'center'}}>
-                       <IconFeather size={150} name="wifi-off"></IconFeather>
+                    <View style={{ marginTop: 100, justifyContent: 'center', alignItems: 'center', alignContent: 'center' }}>
+                        <IconFeather size={150} name="wifi-off"></IconFeather>
                         <Text>No tienes Accesso a Internet</Text>
                     </View>
             }
