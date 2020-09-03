@@ -205,13 +205,16 @@ export default function Formulario() {
     return (
         <View>
             <ScrollView>
-                <HeaderCustom tituloHeader="Formulario" esInicio={false}   ></HeaderCustom>
+            <Button onPress={enviarFomulario} style={styles.botonAgregar} rounded primary>
+                        <Text style={styles.textAgregar}>Guardar</Text>
+                    </Button>
+                {/* <HeaderCustom tituloHeader="Formulario" esInicio={false}   ></HeaderCustom> */}
 
 
 
                 <View>
 
-                    <Text style={styles.tituloFormulario}>ENTREGA INMOBILIARIA</Text>
+                    {/* <Text style={styles.tituloFormulario}>ENTREGA INMOBILIARIA</Text> */}
                     <Form>
 
                         <Text style={styles.labelFormulario}>CASA:</Text>
@@ -320,9 +323,7 @@ export default function Formulario() {
                         }
                     </Form>
                     {/* <Button primary onPress={Send}><Text>Subir Imagen</Text></Button> */}
-                    <Button onPress={enviarFomulario} style={styles.botonAgregar} rounded primary>
-                        <Text style={styles.textAgregar}>Guardar</Text>
-                    </Button>
+                    
 
                     {/* <Button onPress={eliminarDatos} style={styles.botonAgregar} rounded primary>
                 <Text style={styles.textAgregar}>Eliminar</Text>
