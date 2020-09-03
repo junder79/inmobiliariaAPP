@@ -23,7 +23,7 @@ function InicioPantalla({ navigation }) {
 
   const [registros, setRegistros] = useState([]);
   const [refreshing, setRefreshing] = React.useState(false);
-
+  const [mostrarForm, guardarMostrarForm] = useState(false);
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
 
@@ -44,43 +44,50 @@ function InicioPantalla({ navigation }) {
     }
     obtenerData();
   }, []);
-
+  //Muestra el formulario
+  mostrarFormulario =() => {
+    guardarMostrarForm(!mostrarForm);
+  }
   return (
 
 
     <View style={{ flex: 1 }}>
       <HeaderCustom tituloHeader="Inicio" esInicio={true} /*  navigation={this.props.navigation} */ ></HeaderCustom>
       <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <Button style={{ marginTop: 10 }} light onPress={() => navigation.navigate('Formulario')}  ><Text>Agregar Entrega</Text><IconFont name="plus" style={{ marginRight: 10 }} size={20}></IconFont></Button>
+        <Button style={{ marginTop: 5 }} light onPress={() => mostrarFormulario() }  ><Text style={{fontSize:10}}>Nueva Entrega</Text><IconFont name="plus" style={{ marginRight: 10 }} size={20}></IconFont></Button>
       </View>
       <View>
-        {/* <Button style={{ marginTop: 10 }} light><Text>Obtener Data</Text><IconFont name="plus" style={{ marginRight: 10 }} size={20}></IconFont></Button> */}
-      </View>
-      <ScrollView refreshControl={
+        {mostrarForm ? (
+          <Formulario></Formulario>
+        ) : (
+<ScrollView refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }>
         {registros.map(registro => (
           <View style={styles.registroAsyn}>
-            
-              <Text style={styles.label}>Casa:</Text>
-              <Text>{registro.selectCasa}</Text>
-            
-            
-              <Text style={styles.label}>Recinto:</Text>
-              <Text>{registro.selectRecinto}</Text>
-            
-           
-              <Text style={styles.label}>Observación:</Text>
-              <Text>{registro.observationText}</Text>
-            
-           
-              <Text style={styles.label}>Estado:</Text>
-              <Text>{registro.selectEstado}
-              </Text>
-           
+
+            <Text style={styles.label}>Casa:</Text>
+            <Text>{registro.selectCasa}</Text>
+
+
+            <Text style={styles.label}>Recinto:</Text>
+            <Text>{registro.selectRecinto}</Text>
+
+
+            <Text style={styles.label}>Observación:</Text>
+            <Text>{registro.observationText}</Text>
+
+
+            <Text style={styles.label}>Estado:</Text>
+            <Text>{registro.selectEstado}
+            </Text>
+
           </View>
         ))}
       </ScrollView>
+      )}
+      </View>
+      
 
 
     </View>
@@ -214,21 +221,21 @@ const TabNavigator = createBottomTabNavigator({
   },
 });
 
-const styles =  StyleSheet.create({
-  registroAsyn:{
-    backgroundColor:'#fff',
-    marginBottom:10,
-    borderBottomColor:'#e1e1e1',
-    borderBottomWidth:1,
-    paddingVertical:20,
-    paddingRight:10,
-    paddingLeft:10,
-    marginTop:10
+const styles = StyleSheet.create({
+  registroAsyn: {
+    backgroundColor: '#fff',
+    marginBottom: 10,
+    borderBottomColor: '#e1e1e1',
+    borderBottomWidth: 1,
+    paddingVertical: 20,
+    paddingRight: 10,
+    paddingLeft: 10,
+    marginTop: 10
   },
-  label:{
-    fontWeight:'bold',
+  label: {
+    fontWeight: 'bold',
   },
-  text:{
+  text: {
 
   }
 })
