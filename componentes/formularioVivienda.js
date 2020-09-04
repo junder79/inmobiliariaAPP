@@ -22,7 +22,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import ImagePicker from 'react-native-image-picker';
 import IconFont from 'react-native-vector-icons/FontAwesome';
 
-export default function Formulario() {
+export default function Formulario({ guardarMostrarForm, setRegistroArray, registroArray }) {
     const [fotoUrl, setFotoUrl] = useState('');
     foto = async () => {
         const options = {
@@ -34,7 +34,7 @@ export default function Formulario() {
                 chooseFromLibraryButtonTitle: 'Elegir desde la galería'
             },
         };
-        console.log("PRESIONADO");
+  
         // Open Image Library:
 
         ImagePicker.showImagePicker(options, (response) => {
@@ -57,7 +57,7 @@ export default function Formulario() {
                 // Send(source.uri);
                 setFotoUri(source.uri);
                 setNombreFoto(source.nombre);
-           
+
 
             }
         });
@@ -67,12 +67,13 @@ export default function Formulario() {
     /* VALORES DE INPUT, INCIADOS */
     const [selectCasa, selectCasaSelected] = useState("Seleccione Casa");
     const [selectRecinto, selectRecintoSelected] = useState("Seleccione Recinto");
+    const [selectedValue, setSelectedValue] = useState("Seleccione Aspecto");
     const [selectEstado, selectEstadoSelected] = useState("Seleccione Estado");
     const [observationText, setObservation] = useState('');
     const [fotoUri, setFotoUri] = useState('');
     const [nombreFoto, setNombreFoto] = useState('');
 
-    const [registroArray, setRegistroArray] = useState([]);
+
 
     const netInfo = useNetInfo();
     /* Toast o Mensajes*/
@@ -120,7 +121,7 @@ export default function Formulario() {
         const obtenerData = async () => {
             try {
                 const registroStorage = await AsyncStorage.getItem('registroAsync');
-                
+
             } catch (e) {
                 // saving error
             }
@@ -149,6 +150,7 @@ export default function Formulario() {
             // const formularioArray = [selectCasa, selectRecinto, observationText];
             await AsyncStorage.setItem('registroAsync', registroJson);
             console.log("Agregado");
+
         } catch (e) {
             console.log(e);
 
@@ -185,40 +187,91 @@ export default function Formulario() {
                     console.log(err);
                 })
         } else {
-            toastDesconexion();
-            
+            // toastDesconexion();
+
             /* Se crea un objeto donde almaceno el registro  */
 
             const registroVivienda = { selectCasa, selectRecinto, observationText, selectEstado }
 
-            // Agregar el registro al state 
+            // // Agregar el registro al state 
             const registroNuevo = [...registroArray, registroVivienda];
             setRegistroArray(registroNuevo);
             guardarStorage(JSON.stringify(registroNuevo));
-            // navigation.navigate('Inicio');
+            // Esconder el formulario
+            guardarMostrarForm(false);
+            // console.log("ES"+registroArray);
             // alertaConexion();
         }
 
+    }
+
+    const getPickerRecinto = async (valorPicker) => {
+
+        console.log("Mostrar" + valorPicker);
+        selectRecintoSelected(valorPicker);
+
+
+    }
+
+    if (selectRecinto == "Seleccione Recinto") {
+        var aspectoValorPicker = ["Seleccione Aspecto"];
+    } else if (selectRecinto == 1) {
+        var aspectoValorPicker = ["Seleccione", "Acceso Peatonal", "Acceso Vehicular", "Camara Aguas Lluvia", "Camara UD", "Cesped y Plantas", "Port    on Metalico"];
+    } else if (selectRecinto == 2) {
+        var aspectoValorPicker = ["Seleccione", "Cabina de Ducha", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos", "Puertas", "Servicios (Elec-AP-Alcant-Gas)", "Vanitorio y Griferia", "Ventanas", "WC"];
+    } else if (selectRecinto == 3) {
+        var aspectoValorPicker = ["Seleccione", "Cornisas", "Guardapolvos, molduras y sellos", "Pinturas Cielos", "Pintura Muros", "Pisos", "Puertas", "Pintura Muros", "Revestimiento muros", "Servicios (Elec-AP-Alcant-Gas)", "Tina", "Vanitorio y Griferia", "Ventanas", "WC"];
+    } else if (selectRecinto == 4) {
+        var aspectoValorPicker = ["Seleccione", "Artefactos Electricos", "Cornisas", "Cubierta de Cuarzo", "Extracción/ Ventilación", "Guardapolvos y molduras", "Lavaplatos y grifería", "Muebles Base", "Muebles Colgantes", "Pintura Cielos", "Pintura Muros", "Pisos", "Revestimientos de muro", "Servicios (Elec-AP-Alcant-Gas)", "Ventanas"];
+    } else if (selectRecinto == 5) {
+        var aspectoValorPicker = ["Seleccione", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos", "Puertas", "Rack TV", "Servicios (Electricidad)", "Ventanas"];
+    } else if (selectRecinto == 6) {
+        var aspectoValorPicker = ["Seleccione", "Closet", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos", "Puertas", "Servicios (Electricidad)", "Ventanas"];
+    } else if (selectRecinto == 7) {
+        var aspectoValorPicker = ["Seleccione", "Closet", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos", "Puertas", "Servicios (Electricidad)", "Ventanas"];
+    } else if (selectRecinto == 8) {
+        var aspectoValorPicker = ["Seleccione", "Adornos de Madera", "Celosias de Ventilación", "Muros de Hormigon", "Pilar de Hormigon", "Pilar de Madera", "Viga de Madera"];
+    } else if (selectRecinto == 9) {
+        var aspectoValorPicker = ["Cielo", "Jardinera", "Porcelanato", "Puerta de Acceso"];
+    } else if (selectRecinto == 10) {
+        var aspectoValorPicker = ["Seleccione", "Bajadas de Agua", "Bajo Alero", "Canaletas", "Cubetas", "Hojalatería", "Planchas de Techumbre"];
+    } else if (selectRecinto == 11) {
+        var aspectoValorPicker = ["Seleccione", "Aguas Lluvia", "Calefon", "Gabinete Calefon", "Iluminación Hall de Acceso", "Llave de Jardín", "Medidor Agua Potable", "Medidor de Gas", "Medidor Eléctrico", "puntos Iluminación Patio",];
+    } else if (selectRecinto == 12) {
+        var aspectoValorPicker = ["Seleccione", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos", "Servicios (Electricidad)", "Ventanas",];
+    } else if (selectRecinto == 13) {
+        var aspectoValorPicker = ["Seleccione", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos",];
+    } else if (selectRecinto == 14) {
+        var aspectoValorPicker = ["Seleccione", "Panderetas"];
+    } else if (selectRecinto == 15) {
+        var aspectoValorPicker = ["Seleccione", "Cornisas", "Guardapolvos", "Muebles", "Pintura Cielos", "Pintura Muros", "Pisos",];
+    } else {
+        var aspectoValorPicker = ["TODOS"];
     }
 
 
     return (
         <View>
             <ScrollView>
-            <Button onPress={enviarFomulario} style={styles.botonAgregar} rounded primary>
-                        <Text style={styles.textAgregar}>Guardar</Text>
-                    </Button>
-                {/* <HeaderCustom tituloHeader="Formulario" esInicio={false}   ></HeaderCustom> */}
-
-
-
+                <Button onPress={enviarFomulario} style={styles.botonAgregar} rounded primary>
+                    <Text style={styles.textAgregar}>Guardar</Text>
+                </Button>
                 <View>
 
-                    {/* <Text style={styles.tituloFormulario}>ENTREGA INMOBILIARIA</Text> */}
                     <Form>
 
                         <Text style={styles.labelFormulario}>CASA:</Text>
-                        <Picker
+                       <View style={{
+                            width: 300,
+                            marginTop: 15,
+                            marginLeft: 20,
+                            marginRight: 20,
+                            borderColor: 'black',
+                            borderBottomWidth: 1,
+                            borderRadius: 10,
+                            alignSelf: 'center'
+                        }}>
+                       <Picker
                             selectedValue={selectCasa}
                             style={styles.pickerFormulario}
                             onValueChange={(itemValue, itemIndex) => selectCasaSelected(itemValue)}
@@ -235,6 +288,7 @@ export default function Formulario() {
                             <Picker.Item label="3D 8 Santorini" value="3D_8_Santorini" />
                             <Picker.Item label="3D 9 Mallorca" value="3D_9_Mallorca" />
                         </Picker>
+                       </View>
                         <Text style={styles.labelFormulario}>RECINTO:</Text>
                         <View style={{
                             width: 300,
@@ -249,7 +303,7 @@ export default function Formulario() {
                             <Picker
                                 selectedValue={selectRecinto}
                                 style={{ height: 50, width: 500, borderWidth: 1, borderColor: 'black' }}
-                                onValueChange={(itemValue, itemIndex) => selectRecintoSelected(itemValue)}
+                                onValueChange={(itemValue, itemIndex) => getPickerRecinto(itemValue)}
                             >
                                 <Picker.Item label="Seleccione Recinto" value="0" />
                                 <Picker.Item label="Antejardín" value="1" />
@@ -273,22 +327,23 @@ export default function Formulario() {
                         <View style={{
                             width: 300,
                             marginTop: 15,
-                            marginLeft: 10,
+                            marginLeft: 20,
                             marginRight: 20,
                             borderColor: 'black',
                             borderBottomWidth: 1,
                             borderRadius: 10,
                             alignSelf: 'center'
                         }}>
-                            <RNPickerSelect
-                                onValueChange={(value) => console.log(value)}
+                            <Picker
+                                selectedValue={selectedValue}
+                                style={{ height: 50, width: 500, borderWidth: 1, borderColor: 'black' }}
+                                onValueChange={(itemValue, itemIndex) => setSelectedValue(itemValue)}
+                            >
+                                {aspectoValorPicker.map((item, index) => {
+                                    return (<Picker.Item label={item} value={index} key={item} />)
+                                })}
 
-                                items={[
-                                    { label: 'Aspecto 1 ', value: '1' },
-                                    { label: 'Aspecto 2', value: '2' },
-                                    { label: 'Aspecto 3 ', value: '3' },
-                                ]}
-                            />
+                            </Picker>
                         </View>
                         <Text style={styles.labelFormulario}>ESTADO DEL REQUERIMIENTO:</Text>
                         <View style={{
@@ -323,7 +378,7 @@ export default function Formulario() {
                         }
                     </Form>
                     {/* <Button primary onPress={Send}><Text>Subir Imagen</Text></Button> */}
-                    
+
 
                     {/* <Button onPress={eliminarDatos} style={styles.botonAgregar} rounded primary>
                 <Text style={styles.textAgregar}>Eliminar</Text>
