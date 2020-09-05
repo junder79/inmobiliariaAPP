@@ -22,7 +22,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import ImagePicker from 'react-native-image-picker';
 import IconFont from 'react-native-vector-icons/FontAwesome';
 
-export default function Formulario({ guardarMostrarForm, setRegistroArray, registroArray }) {
+export default function Formulario({ guardarMostrarForm, setRegistroArray, registroArray,guardarStorage }) {
     const [fotoUrl, setFotoUrl] = useState('');
     foto = async () => {
         const options = {
@@ -144,18 +144,7 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
         }
     }
 
-    const guardarStorage = async (registroJson) => {
-        try {
-            /* Guardar Datos de manera local */
-            // const formularioArray = [selectCasa, selectRecinto, observationText];
-            await AsyncStorage.setItem('registroAsync', registroJson);
-            console.log("Agregado");
 
-        } catch (e) {
-            console.log(e);
-
-        }
-    }
 
 
 
@@ -191,15 +180,16 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
 
             /* Se crea un objeto donde almaceno el registro  */
 
-            const registroVivienda = { selectCasa, selectRecinto, observationText, selectEstado }
+            const registroVivienda = { selectCasa, selectRecinto, observationText, selectEstado , selectedValue }
 
             // // Agregar el registro al state 
             const registroNuevo = [...registroArray, registroVivienda];
             setRegistroArray(registroNuevo);
             guardarStorage(JSON.stringify(registroNuevo));
+            console.log("Nuevo storage" +registroArray);
             // Esconder el formulario
             guardarMostrarForm(false);
-            // console.log("ES"+registroArray);
+            
             // alertaConexion();
         }
 
@@ -246,16 +236,14 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
     } else if (selectRecinto == 15) {
         var aspectoValorPicker = ["Seleccione", "Cornisas", "Guardapolvos", "Muebles", "Pintura Cielos", "Pintura Muros", "Pisos",];
     } else {
-        var aspectoValorPicker = ["TODOS"];
+        var aspectoValorPicker = ["Seleccione"];
     }
 
 
     return (
         <View>
             <ScrollView>
-                <Button onPress={enviarFomulario} style={styles.botonAgregar} rounded primary>
-                    <Text style={styles.textAgregar}>Guardar</Text>
-                </Button>
+                
                 <View>
 
                     <Form>
@@ -340,7 +328,7 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                                 onValueChange={(itemValue, itemIndex) => setSelectedValue(itemValue)}
                             >
                                 {aspectoValorPicker.map((item, index) => {
-                                    return (<Picker.Item label={item} value={index} key={item} />)
+                                    return (<Picker.Item label={item} value={item} key={item} />)
                                 })}
 
                             </Picker>
@@ -369,11 +357,15 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                             </Picker>
                         </View>
                         <Text style={styles.labelFormulario}>OBSERVACIONES:</Text>
-                        <Textarea onChangeText={observationText => setObservation(observationText)} defaultValue={observationText} rowSpan={5} bordered placeholder="Ingrese observación" />
+                        <Textarea style={{width: 300,
+                            marginTop: 15,
+                            marginLeft: 20,
+                            marginRight: 20,}} onChangeText={observationText => setObservation(observationText)} defaultValue={observationText} rowSpan={5} bordered placeholder="Ingrese observación" />
                         <Button success onPress={foto} style={styles.botonFoto}><Text style={styles.textoFoto}>Elegir Foto <IconFont name="photo"></IconFont> </Text></Button>
                         {
                             fotoUrl.length == 0 ?
-                                <Text >No Hay Imagen Elegida</Text> :
+                                <Text style={{ textAlign: 'center',
+                                fontSize: 20}} >No Hay Imagen Elegida</Text> :
                                 <Image source={fotoUrl} style={styles.fotografia} />
                         }
                     </Form>
@@ -384,6 +376,9 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                 <Text style={styles.textAgregar}>Eliminar</Text>
             </Button> */}
                 </View>
+                <Button onPress={enviarFomulario} style={styles.botonAgregar} rounded primary>
+                    <Text style={styles.textAgregar}>Guardar</Text>
+                </Button>
             </ScrollView>
 
 
@@ -417,13 +412,17 @@ const styles = StyleSheet.create({
     // },
     botonAgregar: {
         marginTop: 10,
-        width: '100%',
+        width: '50%',
         height: '8%',
+        marginLeft:86,
         marginBottom: 40,
         justifyContent: 'center',
 
     },
     botonFoto: {
+        width: '50%',
+        marginLeft:86,
+        marginTop:10,
         justifyContent: 'center',
     },
     textoFoto: {
