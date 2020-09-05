@@ -21,26 +21,32 @@ const wait = (timeout) => {
 
 function InicioPantalla({ navigation }) {
 
-  const [registros, setRegistros] = useState([]);
+  // Definir los sets 
+
+
+  const [registroArray, setRegistroArray] = useState([]);
   const [refreshing, setRefreshing] = React.useState(false);
   const [mostrarForm, guardarMostrarForm] = useState(false);
-  const [registroArray, setRegistroArray] = useState([]);
+  // const [registroArray, setRegistrosArray] = useState([]);
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
 
     wait(2000).then(() => setRefreshing(false));
   }, []);
 
+  // Cargar Registros de AsyncStyorage
+
   useEffect(() => {
     const obtenerData = async () => {
       try {
         const registroStorage = await AsyncStorage.getItem('registroAsync');
-        console.log(registroStorage)
+        
         if (registroStorage) {
-          setRegistros(JSON.parse(registroStorage));
+          setRegistroArray(JSON.parse(registroStorage));
         }
       } catch (e) {
         // saving error
+        console.log(e);
       }
     }
     obtenerData();
@@ -49,6 +55,22 @@ function InicioPantalla({ navigation }) {
   mostrarFormulario = () => {
     guardarMostrarForm(!mostrarForm);
   }
+
+  // ASYNC STORAGE 
+
+  const guardarStorage = async (registroJson) => {
+    try {
+      /* Guardar Datos de manera local */
+      await AsyncStorage.setItem('registroAsync', registroJson);
+
+
+    } catch (e) {
+      console.log(e);
+
+    }
+  }
+
+
   return (
 
 
@@ -57,18 +79,19 @@ function InicioPantalla({ navigation }) {
       <View style={{ justifyContent: 'center', alignItems: 'center' }}>
         <Button style={{ marginTop: 5 }} light onPress={() => mostrarFormulario()}  ><Text style={{ fontSize: 10 }}>Nueva Entrega</Text><IconFont name="plus" style={{ marginRight: 10 }} size={20}></IconFont></Button>
       </View>
-      <View>
+      <ScrollView>
+
         {mostrarForm ? (
           <Formulario
             guardarMostrarForm={guardarMostrarForm}
             setRegistroArray={setRegistroArray}
             registroArray={registroArray}
-
+            guardarStorage={guardarStorage}
           ></Formulario>
         ) : (
             <FlatList
-              data={registros}
-              renderItem={({item}) => (
+              data={registroArray}
+              renderItem={({ item }) => (
 
 
                 <View style={styles.registroAsyn}>
@@ -79,6 +102,12 @@ function InicioPantalla({ navigation }) {
 
                   <Text style={styles.label}>Recinto:</Text>
                   <Text>{item.selectRecinto}</Text>
+
+                  <Text style={styles.label}>Apecto:</Text>
+                  <Text>{item.selectedValues}</Text>
+
+                  <Text style={styles.label}>Imagen:</Text>
+                  <Text>NO_DISPONIBLE</Text>
 
 
                   <Text style={styles.label}>Observación:</Text>
@@ -92,11 +121,12 @@ function InicioPantalla({ navigation }) {
                 </View>
               )
               }
-            
+
             />
 
           )}
-      </View>
+
+      </ScrollView>
 
 
 
@@ -209,26 +239,26 @@ const TabNavigator = createBottomTabNavigator({
       }
     }
   },
-  Ajustes: {
-    screen: AjustesPantalla,
-    navigationOptions: {
-      tabBarLabel: 'Ajustes',
-      tabBarIcon: ({ tintColor }) => (
-        <IconFont name="cog" size={30} ></IconFont>
-      ), tabBarOptions: {
-        activeTintColor: 'black',
-        labelStyle: {
-          fontSize: 13,
+  // Ajustes: {
+  //   screen: AjustesPantalla,
+  //   navigationOptions: {
+  //     tabBarLabel: 'Ajustes',
+  //     tabBarIcon: ({ tintColor }) => (
+  //       <IconFont name="cog" size={30} ></IconFont>
+  //     ), tabBarOptions: {
+  //       activeTintColor: 'black',
+  //       labelStyle: {
+  //         fontSize: 13,
 
-        },
-        style: {
-          backgroundColor: 'white',
-          color: 'white',
+  //       },
+  //       style: {
+  //         backgroundColor: 'white',
+  //         color: 'white',
 
-        },
-      }
-    }
-  },
+  //       },
+  //     }
+  //   }
+  // },
 });
 
 const styles = StyleSheet.create({
