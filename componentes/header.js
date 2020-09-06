@@ -15,14 +15,14 @@ function HeaderCustom(props) {
         ToastAndroid.show("Error al sicronizar, intente nuevamente", ToastAndroid.SHORT);
     };
     const toastSubidaCorrecta = (casaSubida) => {
-        ToastAndroid.show("Registro de Casa: "+casaSubida+" Sicronizada", ToastAndroid.SHORT);
+        ToastAndroid.show("Registro de Casa: " + casaSubida + " Sicronizada", ToastAndroid.SHORT);
     };
 
-    const [datosArray, setDatosArray] = useState([]);
-    const createTwoButtonAlert = () =>
+    // const [datosArray, setDatosArray] = useState([]);
+    const alertaSicronizando = (mensajeSicronizar, subjectSicronizar) =>
         Alert.alert(
-            "Sicronizando Información",
-            "Esto puede tardar unos minutos.",
+            mensajeSicronizar,
+            subjectSicronizar,
             [
                 {
 
@@ -31,8 +31,11 @@ function HeaderCustom(props) {
             ],
             { cancelable: false }
         );
+
+
+
     return (
-        <Header>
+        <Header androidStatusBarColor="#142850"  style={{ backgroundColor: '#27496d' }}>
             <Left>
                 {
                     props.esInicio ?
@@ -53,63 +56,65 @@ function HeaderCustom(props) {
                         <Button transparent>
                             {estadoConexion == "true" ? (<Icon onPress={() => {
 
-                                createTwoButtonAlert();
+                        
+                                // validar de que haya contenido en el AsyncStorage 
+                                const registroArray = JSON.stringify(props.registroArray);
 
-                                //   useEffect(() => {
-                                const obtenerData = async () => {
-                                    try {
-                                        const registroStorage = await AsyncStorage.getItem('registroAsync');
+                                if (props.registroArray.length > 0) {
+                                    alertaSicronizando("Sicronizando Información", "Esto puede tardar unos minutos.");
 
-                                        if (registroStorage) {
-                                            setDatosArray(JSON.parse(registroStorage));
+                                    props.registroArray.map((prop, key) => {
+
+                                        let url = "https://grupohexxa.cl/inmobiliaria/app.php";
+                                        let formularioAsync = new FormData();
+                                        formularioAsync.append('casa', prop.selectCasa)
+                                        formularioAsync.append('recinto', prop.selectRecinto)
+                                        formularioAsync.append('observacion', prop.observationText)
+                                        formularioAsync.append('estado', prop.selectEstado)
+                                        formularioAsync.append('aspecto', prop.selectedValue)
+                                        formularioAsync.append('id', prop.id)
+                                        formularioAsync.append('submit', 'ok');
+                                        if (prop.fotoUrl.uri === '') {
+
+                                        } else {
+                                            formularioAsync.append('imagen', { type: 'image/jpg', uri: prop.fotoUrl.uri, name: prop.fotoUrl.nombre });
                                         }
-                                    } catch (e) {
-                                        // saving error
-                                        console.log(e);
-                                    }
+                                        console.log(formularioAsync);
+                                        fetch(url, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Accept': '*',
+                                                'Content-Type': 'multipart/form-data',
+                                            },
+                                            body: formularioAsync
+                                        }).then(response => response.json())
+                                            .then(response => {
+
+                                                let respuestaServidor = JSON.stringify(response);
+                                                if (respuestaServidor == 1) {
+                                                    toastSubidaCorrecta(prop.selectCasa);
+                                                    props.eliminarRegistro();
+                                                } else {
+                                                    toastErrorSubida();
+                                                }
+                                                console.log(
+                                                    "POST Response",
+                                                    "Response Body -> " + JSON.stringify(response)
+                                                )
+
+                                            }).catch((err) => {
+                                                console.log(err);
+                                                // Mostrar Mensaje de error y evitar que el contenido no se suba 
+                                                toastErrorSubida();
+
+                                                
+                                            })
+                                    })
+
+                                } else {
+                                    alertaSicronizando("No tienes registros pendientes por subir", "");
                                 }
-                                obtenerData();
 
-                                datosArray.map((prop, key) => {
-                                    
-                                    let url = "https://grupohexxa.cl/inmobiliaria/app-test.php";
-                                    let formularioAsync = new FormData();
-                                    formularioAsync.append('casa', prop.selectCasa)
-                                    formularioAsync.append('recinto', prop.selectRecinto)
-                                    formularioAsync.append('observacion', prop.observationText)
-                                    formularioAsync.append('estado', prop.selectEstado)
-                                    formularioAsync.append('aspecto', prop.selectedValue)
-                                    formularioAsync.append('submit', 'ok');
-                                    if (prop.fotoUrl.uri === '') {
-
-                                    } else {
-                                        formularioAsync.append('imagen', { type: 'image/jpg', uri: prop.fotoUrl.uri, name: prop.fotoUrl.nombre });
-                                    }
-                                    console.log(formularioAsync);
-                                    fetch(url, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Accept': '*',
-                                            'Content-Type': 'multipart/form-data',
-                                        },
-                                        body: formularioAsync
-                                    }).then(response => response.json())
-                                        .then(response => {
-
-                                            console.log(
-                                                "POST Response",
-                                                "Response Body -> " + JSON.stringify(response)
-                                            )
-                                            toastSubidaCorrecta(prop.selectCasa);
-                                            // Eliminar el asysnc Storage subido
-                                            
-                                        }).catch((err) => {
-                                            console.log(err);
-                                            toastErrorSubida();
-
-                                            // Mostrar Mensaje de error y evitar que el contenido no se suba 
-                                        })
-                                })
 
                             }}
                                 title="Press Me" style={styles.iconoRefresh} name='refresh' />) : (null)}
