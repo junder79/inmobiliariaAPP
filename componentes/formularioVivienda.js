@@ -21,8 +21,8 @@ import HeaderCustom from './header';
 import RNPickerSelect from 'react-native-picker-select';
 import ImagePicker from 'react-native-image-picker';
 import IconFont from 'react-native-vector-icons/FontAwesome';
-
-export default function Formulario({ guardarMostrarForm, setRegistroArray, registroArray,guardarStorage }) {
+import shortid from 'shortid';
+export default function Formulario({ guardarMostrarForm, setRegistroArray, registroArray, guardarStorage }) {
     const [fotoUrl, setFotoUrl] = useState('');
     foto = async () => {
         const options = {
@@ -34,7 +34,7 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                 chooseFromLibraryButtonTitle: 'Elegir desde la galería'
             },
         };
-  
+
         // Open Image Library:
 
         ImagePicker.showImagePicker(options, (response) => {
@@ -146,51 +146,101 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
 
 
 
+    // Mensaje de validacion de campos 
+
+    const mensajeValidacionCampos = (campoIncompleto) =>
+        Alert.alert(
+            "IMPORTANTE",
+            campoIncompleto,
+            [
+                {
+                    text: "Ok",
 
 
+
+                },
+
+            ],
+            { cancelable: false }
+        );
+
+
+    const mensajeValidacionInternet = () =>
+        Alert.alert(
+            "Sin Internet",
+            "¿Deseas Guardar?, después tendrás que sicronizar la información",
+            [
+                {
+                    text: "Ok",
+
+                },
+
+            ],
+            { cancelable: false }
+        );
 
 
     enviarFomulario = async () => {
-        if (netInfo.isConnected.toString() === "true") {
-            toast();
-            let url = "https://grupohexxa.cl/inmobiliaria/app.php";
-            let UplodedFile = new FormData();
-            console.log(url)
-            UplodedFile.append('casa', selectCasa)
-            UplodedFile.append('recinto', selectRecinto)
-            UplodedFile.append('observacion', observationText)
-            UplodedFile.append('estado', selectEstado)
-            UplodedFile.append('submit', 'ok');
-            UplodedFile.append('imagen', { type: 'image/jpg', uri: fotoUri, name: nombreFoto });
-            fetch(url, {
-                method: 'POST',
-                body: UplodedFile
-            }).then(response => response.json())
-                .then(response => {
 
-                    console.log(
-                        "POST Response",
-                        "Response Body -> " + JSON.stringify(response)
-                    )
-                }).catch((err) => {
-                    console.log(err);
-                })
+        // Validar campos 
+
+        if (selectCasa.trim() === 'Seleccione Casa' || selectCasa.trim() === '') {
+            mensajeValidacionCampos("Seleccione Casa");
+        } else if (selectRecinto.trim() === 'Seleccione Recinto' || selectRecinto.trim() === '') {
+            mensajeValidacionCampos("Seleccione Recinto");
+        } else if (selectedValue.trim() === 'Seleccione Aspecto' || selectCasa.trim() === 'Seleccione') {
+            mensajeValidacionCampos("Seleccione Aspecto");
+        } else if (selectEstado.trim() === 'Seleccione Estado' || selectEstado.trim() === '') {
+            mensajeValidacionCampos("Seleccione Estado");
+        } else if (observationText.trim() === '') {
+            mensajeValidacionCampos("Escriba algún observación");
         } else {
-            // toastDesconexion();
 
-            /* Se crea un objeto donde almaceno el registro  */
+            if (netInfo.isConnected.toString() === "true") {
+                toast();
+                let url = "https://grupohexxa.cl/inmobiliaria/app.php";
+                let UplodedFile = new FormData();
+                console.log(url)
+                UplodedFile.append('casa', selectCasa)
+                UplodedFile.append('recinto', selectRecinto)
+                UplodedFile.append('observacion', observationText)
+                UplodedFile.append('estado', selectEstado)
+                UplodedFile.append('submit', 'ok');
+                UplodedFile.append('imagen', { type: 'image/jpg', uri: fotoUri, name: nombreFoto });
+                console.log("ES" + JSON.stringify(UplodedFile));
+                fetch(url, {
+                    method: 'POST',
+                    body: UplodedFile
+                }).then(response => response.json())
+                    .then(response => {
 
-            const registroVivienda = { selectCasa, selectRecinto, observationText, selectEstado , selectedValue }
+                        console.log(
+                            "POST Response",
+                            "Response Body -> " + JSON.stringify(response)
+                        )
+                    }).catch((err) => {
+                        console.log(err);
+                    })
+            } else {
+                // toastDesconexion();
+                mensajeValidacionInternet();
+                /* Se crea un objeto donde almaceno el registro  */
 
-            // // Agregar el registro al state 
-            const registroNuevo = [...registroArray, registroVivienda];
-            setRegistroArray(registroNuevo);
-            guardarStorage(JSON.stringify(registroNuevo));
-            console.log("Nuevo storage" +registroArray);
-            // Esconder el formulario
-            guardarMostrarForm(false);
-            
-            // alertaConexion();
+                const registroVivienda = { selectCasa, selectRecinto, observationText, selectEstado, selectedValue, fotoUrl }
+
+                registroVivienda.id = shortid.generate();
+                console.log("Agregado" + registroVivienda)
+                // // Agregar el registro al state 
+                const registroNuevo = [...registroArray, registroVivienda];
+                
+                setRegistroArray(registroNuevo);
+                guardarStorage(JSON.stringify(registroNuevo));
+                console.log("Nuevo storage" + registroArray);
+                // Esconder el formulario
+                guardarMostrarForm(false);
+
+                // alertaConexion();
+            }
         }
 
     }
@@ -222,7 +272,7 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
     } else if (selectRecinto == 8) {
         var aspectoValorPicker = ["Seleccione", "Adornos de Madera", "Celosias de Ventilación", "Muros de Hormigon", "Pilar de Hormigon", "Pilar de Madera", "Viga de Madera"];
     } else if (selectRecinto == 9) {
-        var aspectoValorPicker = ["Cielo", "Jardinera", "Porcelanato", "Puerta de Acceso"];
+        var aspectoValorPicker = ["Seleccione", "Cielo", "Jardinera", "Porcelanato", "Puerta de Acceso"];
     } else if (selectRecinto == 10) {
         var aspectoValorPicker = ["Seleccione", "Bajadas de Agua", "Bajo Alero", "Canaletas", "Cubetas", "Hojalatería", "Planchas de Techumbre"];
     } else if (selectRecinto == 11) {
@@ -243,13 +293,13 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
     return (
         <View>
             <ScrollView>
-                
+
                 <View>
 
                     <Form>
 
                         <Text style={styles.labelFormulario}>CASA:</Text>
-                       <View style={{
+                        <View style={{
                             width: 300,
                             marginTop: 15,
                             marginLeft: 20,
@@ -259,24 +309,24 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                             borderRadius: 10,
                             alignSelf: 'center'
                         }}>
-                       <Picker
-                            selectedValue={selectCasa}
-                            style={styles.pickerFormulario}
-                            onValueChange={(itemValue, itemIndex) => selectCasaSelected(itemValue)}
-                        >
-                            <Picker.Item label="Seleccione Casa" value="" />
-                            <Picker.Item label="2B 6 Mallorca" value="2B_6_Mallorca" />
-                            <Picker.Item label="2B 7 Santorini" value="2B_7_Santorini" />
-                            <Picker.Item label="3B 8 Mallorca" value="3B_8_Mallorca" />
-                            <Picker.Item label="3B 9 Capri" value="3B_9_Capri" />
-                            <Picker.Item label="3B 10 Santorini" value="3B_10_Santorini" />
-                            <Picker.Item label="4B 11 Mallorca" value="4B_11_Mallorca" />
-                            <Picker.Item label="2D 6 Santorini" value="2D_6_Santorini" />
-                            <Picker.Item label="2D 7 Mallorca" value="2D_7_Mallorca" />
-                            <Picker.Item label="3D 8 Santorini" value="3D_8_Santorini" />
-                            <Picker.Item label="3D 9 Mallorca" value="3D_9_Mallorca" />
-                        </Picker>
-                       </View>
+                            <Picker
+                                selectedValue={selectCasa}
+                                style={styles.pickerFormulario}
+                                onValueChange={(itemValue, itemIndex) => selectCasaSelected(itemValue)}
+                            >
+                                <Picker.Item label="Seleccione Casa" value='' />
+                                <Picker.Item label="2B 6 Mallorca" value="2B_6_Mallorca" />
+                                <Picker.Item label="2B 7 Santorini" value="2B_7_Santorini" />
+                                <Picker.Item label="3B 8 Mallorca" value="3B_8_Mallorca" />
+                                <Picker.Item label="3B 9 Capri" value="3B_9_Capri" />
+                                <Picker.Item label="3B 10 Santorini" value="3B_10_Santorini" />
+                                <Picker.Item label="4B 11 Mallorca" value="4B_11_Mallorca" />
+                                <Picker.Item label="2D 6 Santorini" value="2D_6_Santorini" />
+                                <Picker.Item label="2D 7 Mallorca" value="2D_7_Mallorca" />
+                                <Picker.Item label="3D 8 Santorini" value="3D_8_Santorini" />
+                                <Picker.Item label="3D 9 Mallorca" value="3D_9_Mallorca" />
+                            </Picker>
+                        </View>
                         <Text style={styles.labelFormulario}>RECINTO:</Text>
                         <View style={{
                             width: 300,
@@ -293,7 +343,7 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                                 style={{ height: 50, width: 500, borderWidth: 1, borderColor: 'black' }}
                                 onValueChange={(itemValue, itemIndex) => getPickerRecinto(itemValue)}
                             >
-                                <Picker.Item label="Seleccione Recinto" value="0" />
+                                <Picker.Item label="Seleccione Recinto" value='' />
                                 <Picker.Item label="Antejardín" value="1" />
                                 <Picker.Item label="Baño Familiar" value="2" />
                                 <Picker.Item label="Baño Suite" value="3" />
@@ -349,7 +399,7 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                                 style={{ height: 50, width: 500, borderWidth: 1, borderColor: 'black' }}
                                 onValueChange={(itemValue, itemIndex) => selectEstadoSelected(itemValue)}
                             >
-                                <Picker.Item label="Seleccione Estado" value="0" />
+                                <Picker.Item label="Seleccione Estado" value='' />
                                 <Picker.Item label="Cumple" value="Cumple" />
                                 <Picker.Item label="No Cumple" value="No Cumple" />
                                 <Picker.Item label="No Aplica" value="No Aplica" />
@@ -357,15 +407,19 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                             </Picker>
                         </View>
                         <Text style={styles.labelFormulario}>OBSERVACIONES:</Text>
-                        <Textarea style={{width: 300,
+                        <Textarea style={{
+                            width: 300,
                             marginTop: 15,
                             marginLeft: 20,
-                            marginRight: 20,}} onChangeText={observationText => setObservation(observationText)} defaultValue={observationText} rowSpan={5} bordered placeholder="Ingrese observación" />
+                            marginRight: 20,
+                        }} onChangeText={observationText => setObservation(observationText)} defaultValue={observationText} rowSpan={5} bordered placeholder="Ingrese observación" />
                         <Button success onPress={foto} style={styles.botonFoto}><Text style={styles.textoFoto}>Elegir Foto <IconFont name="photo"></IconFont> </Text></Button>
                         {
                             fotoUrl.length == 0 ?
-                                <Text style={{ textAlign: 'center',
-                                fontSize: 20}} >No Hay Imagen Elegida</Text> :
+                                <Text style={{
+                                    textAlign: 'center',
+                                    fontSize: 20
+                                }} >No Hay Imagen Elegida</Text> :
                                 <Image source={fotoUrl} style={styles.fotografia} />
                         }
                     </Form>
@@ -414,15 +468,15 @@ const styles = StyleSheet.create({
         marginTop: 10,
         width: '50%',
         height: '8%',
-        marginLeft:86,
+        marginLeft: 86,
         marginBottom: 40,
         justifyContent: 'center',
 
     },
     botonFoto: {
         width: '50%',
-        marginLeft:86,
-        marginTop:10,
+        marginLeft: 86,
+        marginTop: 10,
         justifyContent: 'center',
     },
     textoFoto: {
