@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Image, StyleSheet, RefreshControl } from 'react-native';
 import { createAppContainer } from 'react-navigation';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
-import { Container, Header, Title, Button, Left, Right, Body, Icon, Text, Form } from 'native-base';
+import { Container, Header, Content, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Right, Body } from 'native-base';
 import { createStackNavigator } from 'react-navigation-stack';
 
 import Formulario from './componentes/formularioVivienda';
@@ -40,7 +40,7 @@ function InicioPantalla({ navigation }) {
     const obtenerData = async () => {
       try {
         const registroStorage = await AsyncStorage.getItem('registroAsync');
-        
+
         if (registroStorage) {
           setRegistroArray(JSON.parse(registroStorage));
         }
@@ -71,12 +71,14 @@ function InicioPantalla({ navigation }) {
   }
 
 
+
+
   return (
 
 
     <View style={{ flex: 1 }}>
       <HeaderCustom tituloHeader="Inicio" esInicio={true} /*  navigation={this.props.navigation} */ ></HeaderCustom>
-      <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <View >
         <Button style={{ marginTop: 5 }} light onPress={() => mostrarFormulario()}  ><Text style={{ fontSize: 10 }}>Nueva Entrega</Text><IconFont name="plus" style={{ marginRight: 10 }} size={20}></IconFont></Button>
       </View>
       <ScrollView>
@@ -91,12 +93,51 @@ function InicioPantalla({ navigation }) {
         ) : (
             <FlatList
               data={registroArray}
+              keyExtractor = { registro => registroArray.id}
               renderItem={({ item }) => (
-
+              
 
                 <View style={styles.registroAsyn}>
-
-                  <Text style={styles.label}>Casa:</Text>
+                  <Card style={{ flex: 0 }}>
+                    <CardItem>
+                      <Left>
+                      <Icon name="link" />
+                        <Body>
+                        <Text>{item.selectCasa}</Text>
+                        <Text>{item.selectRecinto}</Text>
+                        <Text>{item.selectedValue}</Text>
+                        </Body>
+                      </Left>
+                    </CardItem>
+                    <CardItem>
+                      <Body>
+                      {
+                    item.fotoUrl.length == 0 ?
+                    <Text style={{
+                        fontSize: 20
+                    }} >No Hay Imagen Elegida</Text> :
+                    <Image source={item.fotoUrl} style={{ height: 200, width: 300, flex: 1 }}  />
+                  }
+                        {/* <Image source={{ uri: 'Image URL' }} style={{ height: 200, width: 200, flex: 1 }} /> */}
+                        <Text style={{marginTop:5}}>{item.observationText}</Text>
+                      </Body>
+                    </CardItem>
+                    <CardItem>
+                      <Left>
+                        <Button transparent textStyle={{ color: '#87838B' }}>
+                          <IconFeather color= '#87838B' size={25} name="info"></IconFeather>
+                          <Text>{item.selectEstado}</Text>
+                        </Button>
+                      </Left>
+                      <Right>
+                        <Button transparent textStyle={{ color: '#87838B' }}>
+                          <IconFeather color= 'red' size={20} name="trash-2"></IconFeather>
+                        
+                        </Button>
+                      </Right>
+                    </CardItem>
+                  </Card>
+                  {/* <Text style={styles.label}>Casa:</Text>
                   <Text>{item.selectCasa}</Text>
 
 
@@ -104,10 +145,17 @@ function InicioPantalla({ navigation }) {
                   <Text>{item.selectRecinto}</Text>
 
                   <Text style={styles.label}>Apecto:</Text>
-                  <Text>{item.selectedValues}</Text>
+                  <Text>{item.selectedValue}</Text>
 
                   <Text style={styles.label}>Imagen:</Text>
-                  <Text>NO_DISPONIBLE</Text>
+                  {
+                    item.fotoUrl.length == 0 ?
+                    <Text style={{
+                        fontSize: 20
+                    }} >No Hay Imagen Elegida</Text> :
+                    <Image source={item.fotoUrl} style={styles.fotografia}  />
+                  }
+                 
 
 
                   <Text style={styles.label}>Observación:</Text>
@@ -116,10 +164,11 @@ function InicioPantalla({ navigation }) {
 
                   <Text style={styles.label}>Estado:</Text>
                   <Text>{item.selectEstado}
-                  </Text>
+                  </Text> */}
 
                 </View>
               )
+             
               }
 
             />
@@ -203,7 +252,7 @@ const TabNavigator = createBottomTabNavigator({
     navigationOptions: {
       tabBarLabel: 'Inicio',
       tabBarIcon: ({ tintColor }) => (
-        <IconFeather name="home" size={30} ></IconFeather>
+        <IconFeather name="home" size={20} ></IconFeather>
       ),
       tabBarOptions: {
         activeTintColor: 'black',
@@ -224,7 +273,7 @@ const TabNavigator = createBottomTabNavigator({
     navigationOptions: {
       tabBarLabel: 'Consultar',
       tabBarIcon: ({ tintColor }) => (
-        <IconFeather name="search" size={30} ></IconFeather>
+        <IconFeather name="search" size={20} ></IconFeather>
       ), tabBarOptions: {
         activeTintColor: 'black',
         labelStyle: {
@@ -275,8 +324,13 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: 'bold',
   },
-  text: {
-
-  }
+  fotografia: {
+    borderColor: 'black',
+    borderWidth: 1,
+    width: 300,
+    height: 200,
+    marginLeft: 30,
+    marginTop: 10
+  },
 })
 export default createAppContainer(TabNavigator);
