@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Image, StyleSheet, RefreshControl } from 'react-native';
+import { View, Image, StyleSheet, RefreshControl, ToastAndroid } from 'react-native';
 import { createAppContainer } from 'react-navigation';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { Container, Header, Content, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Right, Body } from 'native-base';
@@ -28,11 +28,18 @@ function InicioPantalla({ navigation }) {
   const [refreshing, setRefreshing] = React.useState(false);
   const [mostrarForm, guardarMostrarForm] = useState(false);
   // const [registroArray, setRegistrosArray] = useState([]);
+  const [nombreBoton, setNombreBoton] = useState('Nueva Entrega');
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
 
     wait(2000).then(() => setRefreshing(false));
   }, []);
+
+  // TOAST 
+  const toastMensajeEliminarRegistro = () => {
+    ToastAndroid.show("Eliminado", ToastAndroid.SHORT);
+  };
+
 
   // Cargar Registros de AsyncStyorage
 
@@ -52,8 +59,14 @@ function InicioPantalla({ navigation }) {
     obtenerData();
   }, []);
   //Muestra el formulario
-  mostrarFormulario = () => {
+  mostrarFormulario = (textoBoton) => {
+
     guardarMostrarForm(!mostrarForm);
+    if (mostrarForm === false) {
+      setNombreBoton("Listar Registros Pendientes");
+    } else {
+      setNombreBoton('Nueva Entrega');
+    }
   }
 
   // ASYNC STORAGE 
@@ -70,6 +83,29 @@ function InicioPantalla({ navigation }) {
     }
   }
 
+  const eliminarRegistro = async () => {
+    try {
+      await AsyncStorage.removeItem('registroAsync');
+      setRegistroArray('');
+      guardarStorage('');
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const eliminarItemRegistro = async (idItem) => {
+    try {
+
+      const registroFiltrado = registroArray.filter(registro => registro.id !== idItem);
+      setRegistroArray(registroFiltrado);
+      guardarStorage(JSON.stringify(registroFiltrado));
+      toastMensajeEliminarRegistro();
+    }
+    catch (error) {
+      console.log(error)
+    }
+  };
 
 
 
@@ -77,101 +113,81 @@ function InicioPantalla({ navigation }) {
 
 
     <View style={{ flex: 1 }}>
-      <HeaderCustom tituloHeader="Inicio" esInicio={true} /*  navigation={this.props.navigation} */ ></HeaderCustom>
+      <HeaderCustom eliminarItemRegistro={eliminarItemRegistro}  eliminarRegistro = {eliminarRegistro} registroArray={registroArray}  tituloHeader="Inicio" esInicio={true} /*  navigation={this.props.navigation} */ ></HeaderCustom>
       <View >
-        <Button style={{ marginTop: 5 }} light onPress={() => mostrarFormulario()}  ><Text style={{ fontSize: 10 }}>Nueva Entrega</Text><IconFont name="plus" style={{ marginRight: 10 }} size={20}></IconFont></Button>
+        <Button style={{ marginTop: 5, backgroundColor:'#00909e'  }} light onPress={() => mostrarFormulario(nombreBoton)}  ><Text style={{ fontSize: 10 , color:'white'}}>{nombreBoton}</Text><IconFont name="plus" style={{ marginRight: 10 }} color={'white'} size={20}></IconFont></Button>
       </View>
       <ScrollView>
 
         {mostrarForm ? (
           <Formulario
             guardarMostrarForm={guardarMostrarForm}
+            cambiarNombreBoton={setNombreBoton}
             setRegistroArray={setRegistroArray}
             registroArray={registroArray}
             guardarStorage={guardarStorage}
           ></Formulario>
         ) : (
-            <FlatList
-              data={registroArray}
-              keyExtractor = { registro => registroArray.id}
-              renderItem={({ item }) => (
-              
 
-                <View style={styles.registroAsyn}>
-                  <Card style={{ flex: 0 }}>
-                    <CardItem>
-                      <Left>
-                      <Icon name="link" />
+            registroArray.length > 0 ? (
+              <FlatList
+                data={registroArray}
+                keyExtractor={registro => registroArray.id}
+                renderItem={({ item }) => (
+
+
+                  <View style={styles.registroAsyn}>
+                    {/* <Card style={{ flex: 0,backgroundColor:'#dae1e7',borderRadius:40 }}> */}
+                     <View style={{ backgroundColor:'white',borderRadius:40 }}>
+                     <CardItem style={{ backgroundColor:'white',borderRadius:40 }}>
+                        <Left>
+                          <Icon name="link" />
+                          <Body>
+                            <Text>{item.selectCasa}</Text>
+                            <Text>{item.selectRecinto}</Text>
+                            <Text>{item.selectedValue}</Text>
+                          </Body>
+                        </Left>
+                      </CardItem>
+                      <CardItem style={{ backgroundColor:'white',borderRadius:40 }}>
                         <Body>
-                        <Text>{item.selectCasa}</Text>
-                        <Text>{item.selectRecinto}</Text>
-                        <Text>{item.selectedValue}</Text>
+                          {
+                            item.fotoUrl.length == 0 ?
+                              <Text style={{
+                                fontSize: 20
+                              }} >No Hay Imagen Elegida</Text> :
+                              <Image source={item.fotoUrl} style={{ height: 200,  width: '100%', flex: 1 ,borderRadius:40}} />
+                          }
+                          {/* <Image source={{ uri: 'Image URL' }} style={{ height: 200, width: 200, flex: 1 }} /> */}
+                          <Text style={{ marginTop: 5 }}>{item.observationText}</Text>
                         </Body>
-                      </Left>
-                    </CardItem>
-                    <CardItem>
-                      <Body>
-                      {
-                    item.fotoUrl.length == 0 ?
-                    <Text style={{
-                        fontSize: 20
-                    }} >No Hay Imagen Elegida</Text> :
-                    <Image source={item.fotoUrl} style={{ height: 200, width: 300, flex: 1 }}  />
-                  }
-                        {/* <Image source={{ uri: 'Image URL' }} style={{ height: 200, width: 200, flex: 1 }} /> */}
-                        <Text style={{marginTop:5}}>{item.observationText}</Text>
-                      </Body>
-                    </CardItem>
-                    <CardItem>
-                      <Left>
-                        <Button transparent textStyle={{ color: '#87838B' }}>
-                          <IconFeather color= '#87838B' size={25} name="info"></IconFeather>
-                          <Text>{item.selectEstado}</Text>
-                        </Button>
-                      </Left>
-                      <Right>
-                        <Button transparent textStyle={{ color: '#87838B' }}>
-                          <IconFeather color= 'red' size={20} name="trash-2"></IconFeather>
-                        
-                        </Button>
-                      </Right>
-                    </CardItem>
-                  </Card>
-                  {/* <Text style={styles.label}>Casa:</Text>
-                  <Text>{item.selectCasa}</Text>
+                      </CardItem>
+                      <CardItem style={{ backgroundColor:'white',borderRadius:40 }}>
+                        <Left>
+                          <Button transparent>
+                            <IconFeather color={'black'} size={25} name="info"></IconFeather>
+                            <Text style={{color:'black'}}>Estado: {item.selectEstado}</Text>
+                          </Button>
+                        </Left>
+                        <Right>
+                          <Button transparent>
+                            <IconFeather onPress={() => eliminarItemRegistro(item.id)} color={'red'} size={20} name="trash-2"></IconFeather>
 
+                          </Button>
+                        </Right>
+                      </CardItem>
+                     </View>
+                    {/* </Card> */}
 
-                  <Text style={styles.label}>Recinto:</Text>
-                  <Text>{item.selectRecinto}</Text>
+                  </View>
+                )
 
-                  <Text style={styles.label}>Apecto:</Text>
-                  <Text>{item.selectedValue}</Text>
+                }
 
-                  <Text style={styles.label}>Imagen:</Text>
-                  {
-                    item.fotoUrl.length == 0 ?
-                    <Text style={{
-                        fontSize: 20
-                    }} >No Hay Imagen Elegida</Text> :
-                    <Image source={item.fotoUrl} style={styles.fotografia}  />
-                  }
-                 
-
-
-                  <Text style={styles.label}>Observación:</Text>
-                  <Text>{item.observationText}</Text>
-
-
-                  <Text style={styles.label}>Estado:</Text>
-                  <Text>{item.selectEstado}
-                  </Text> */}
-
-                </View>
+              />
+            ) : (
+                <Text style={{ textAlign: 'center', marginTop: 5 }}>No tienes registros pendientes por subir.</Text>
               )
-             
-              }
-
-            />
 
           )}
 
@@ -320,6 +336,8 @@ const styles = StyleSheet.create({
     paddingRight: 10,
     paddingLeft: 10,
     marginTop: 10,
+    borderRadius:30,
+    backgroundColor:'#dae1e7'
   },
   label: {
     fontWeight: 'bold',
