@@ -1,19 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-    SafeAreaView,
-    StyleSheet,
-    ScrollView,
-    View,
-    Text,
-    StatusBar,
-    Picker,
-    TextInput,
-    ToastAndroid,
-    Alert,
-    Image
-
-} from 'react-native';
-import { Container, Header, Title, Button, Left, Right, Body, Icon, Form, Item, Input, Textarea } from 'native-base';
+import { StyleSheet, ScrollView, View, Text, Picker, ToastAndroid, Alert, Image, Modal, } from 'react-native';
+import { Container, Header, Title, Button, Left, Right, Body, Icon, Form, Item, Input, Textarea, Spinner } from 'native-base';
 import NetInfo from "@react-native-community/netinfo";
 import { useNetInfo } from "@react-native-community/netinfo";
 import AsyncStorage from '@react-native-community/async-storage';
@@ -22,7 +9,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import ImagePicker from 'react-native-image-picker';
 import IconFont from 'react-native-vector-icons/FontAwesome';
 import shortid from 'shortid';
-export default function Formulario({ guardarMostrarForm, setRegistroArray, registroArray, guardarStorage }) {
+export default function Formulario({ guardarMostrarForm, cambiarNombreBoton, setRegistroArray, registroArray, guardarStorage }) {
     const [fotoUrl, setFotoUrl] = useState('');
     foto = async () => {
         const options = {
@@ -35,9 +22,9 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
             },
         };
 
-        // Open Image Library:
+        // Open Camera Library:
 
-        ImagePicker.showImagePicker(options, (response) => {
+        ImagePicker.launchCamera(options, (response) => {
             console.log('Response = ', response);
 
             if (response.didCancel) {
@@ -72,7 +59,7 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
     const [observationText, setObservation] = useState('');
     const [fotoUri, setFotoUri] = useState('');
     const [nombreFoto, setNombreFoto] = useState('');
-
+    const [modalVisible, setModalVisible] = useState(false);
 
 
     const netInfo = useNetInfo();
@@ -82,6 +69,10 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
     };
     const toast = () => {
         ToastAndroid.show("Estás en Linea", ToastAndroid.SHORT);
+    };
+
+    const toastErrorSubida = () => {
+        ToastAndroid.show("Hubo un error al guardar el registro.Intente más tarde.", ToastAndroid.SHORT);
     };
 
     const toastDesconexion = () => {
@@ -97,22 +88,17 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
         ToastAndroid.show("Datos Guardado", ToastAndroid.SHORT);
     };
 
+    const alertaSicronizando = () =>
+        Alert.alert(
+            "Guardando Registro",
+            [
+                {
 
-    // const alertaConexion = () =>
-    //     Alert.alert(
-    //         "SIN CONEXION",
-    //         "¿Deseas Guardar?, se guardará de forma local",
-    //         [
-    //             {
-    //                 text: "Cancel",
-    //                 onPress: () => eliminarDatos(),
-    //                 style: "cancel"
+                },
 
-    //             },
-    //             { text: "OK", onPress: () => [guardarStorage(), toastGuardado()] }
-    //         ],
-    //         { cancelable: false }
-    //     );
+            ],
+            { cancelable: false }
+        );
 
 
     /* Mostrar los datos del Storage */
@@ -134,15 +120,15 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
 
 
 
-    const eliminarDatos = async () => {
-        try {
-            await AsyncStorage.removeItem('registroAsync');
-            console.log("Eliminado");
-        } catch (e) {
-            console.log(e);
+    // const eliminarDatos = async () => {
+    //     try {
+    //         await AsyncStorage.removeItem('registroAsync');
+    //         console.log("Eliminado");
+    //     } catch (e) {
+    //         console.log(e);
 
-        }
-    }
+    //     }
+    // }
 
 
 
@@ -180,6 +166,13 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
         );
 
 
+    const abrirModalPost = () => {
+        setModalVisible(true);
+    }
+    const cerrarModalPost = () => {
+        setModalVisible(false);
+    }
+
     enviarFomulario = async () => {
 
         // Validar campos 
@@ -194,10 +187,14 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
             mensajeValidacionCampos("Seleccione Estado");
         } else if (observationText.trim() === '') {
             mensajeValidacionCampos("Escriba algún observación");
+        }
+        else if (fotoUri.trim() === '') {
+            mensajeValidacionCampos("Eliga una imagen.");
         } else {
 
             if (netInfo.isConnected.toString() === "true") {
-                toast();
+
+                abrirModalPost();
                 let url = "https://grupohexxa.cl/inmobiliaria/app.php";
                 let UplodedFile = new FormData();
                 console.log(url)
@@ -205,6 +202,8 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                 UplodedFile.append('recinto', selectRecinto)
                 UplodedFile.append('observacion', observationText)
                 UplodedFile.append('estado', selectEstado)
+                UplodedFile.append('aspecto', selectedValue)
+                // UplodedFile.append('id', id)
                 UplodedFile.append('submit', 'ok');
                 UplodedFile.append('imagen', { type: 'image/jpg', uri: fotoUri, name: nombreFoto });
                 console.log("ES" + JSON.stringify(UplodedFile));
@@ -214,12 +213,26 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                 }).then(response => response.json())
                     .then(response => {
 
+                        let respuestaServidor = JSON.stringify(response);
                         console.log(
                             "POST Response",
                             "Response Body -> " + JSON.stringify(response)
                         )
+                        if (respuestaServidor == 1) {
+                            cerrarModalPost();
+                            toastFormularioAgregado();
+                            guardarMostrarForm(false);
+                            cambiarNombreBoton('Nueva Entrega');
+                        } else {
+
+                            cerrarModalPost();
+                            toastErrorSubida();
+                        }
+
                     }).catch((err) => {
                         console.log(err);
+                        cerrarModalPost();
+                        toastErrorSubida();
                     })
             } else {
                 // toastDesconexion();
@@ -232,13 +245,13 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                 console.log("Agregado" + registroVivienda)
                 // // Agregar el registro al state 
                 const registroNuevo = [...registroArray, registroVivienda];
-                
+
                 setRegistroArray(registroNuevo);
                 guardarStorage(JSON.stringify(registroNuevo));
-                console.log("Nuevo storage" + registroArray);
+
                 // Esconder el formulario
                 guardarMostrarForm(false);
-
+                cambiarNombreBoton('Nueva Entrega');
                 // alertaConexion();
             }
         }
@@ -255,35 +268,35 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
 
     if (selectRecinto == "Seleccione Recinto") {
         var aspectoValorPicker = ["Seleccione Aspecto"];
-    } else if (selectRecinto == 1) {
+    } else if (selectRecinto == "Antejardín") {
         var aspectoValorPicker = ["Seleccione", "Acceso Peatonal", "Acceso Vehicular", "Camara Aguas Lluvia", "Camara UD", "Cesped y Plantas", "Port    on Metalico"];
-    } else if (selectRecinto == 2) {
+    } else if (selectRecinto == "Baño Familiar") {
         var aspectoValorPicker = ["Seleccione", "Cabina de Ducha", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos", "Puertas", "Servicios (Elec-AP-Alcant-Gas)", "Vanitorio y Griferia", "Ventanas", "WC"];
-    } else if (selectRecinto == 3) {
+    } else if (selectRecinto == "Baño Suite") {
         var aspectoValorPicker = ["Seleccione", "Cornisas", "Guardapolvos, molduras y sellos", "Pinturas Cielos", "Pintura Muros", "Pisos", "Puertas", "Pintura Muros", "Revestimiento muros", "Servicios (Elec-AP-Alcant-Gas)", "Tina", "Vanitorio y Griferia", "Ventanas", "WC"];
-    } else if (selectRecinto == 4) {
+    } else if (selectRecinto == "Cocina") {
         var aspectoValorPicker = ["Seleccione", "Artefactos Electricos", "Cornisas", "Cubierta de Cuarzo", "Extracción/ Ventilación", "Guardapolvos y molduras", "Lavaplatos y grifería", "Muebles Base", "Muebles Colgantes", "Pintura Cielos", "Pintura Muros", "Pisos", "Revestimientos de muro", "Servicios (Elec-AP-Alcant-Gas)", "Ventanas"];
-    } else if (selectRecinto == 5) {
+    } else if (selectRecinto == "Dormitorio 1 Suite") {
         var aspectoValorPicker = ["Seleccione", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos", "Puertas", "Rack TV", "Servicios (Electricidad)", "Ventanas"];
-    } else if (selectRecinto == 6) {
+    } else if (selectRecinto == "Dormitorio 2") {
         var aspectoValorPicker = ["Seleccione", "Closet", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos", "Puertas", "Servicios (Electricidad)", "Ventanas"];
-    } else if (selectRecinto == 7) {
+    } else if (selectRecinto == "Dormitorio 3") {
         var aspectoValorPicker = ["Seleccione", "Closet", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos", "Puertas", "Servicios (Electricidad)", "Ventanas"];
-    } else if (selectRecinto == 8) {
+    } else if (selectRecinto == "Fachada Exterior ") {
         var aspectoValorPicker = ["Seleccione", "Adornos de Madera", "Celosias de Ventilación", "Muros de Hormigon", "Pilar de Hormigon", "Pilar de Madera", "Viga de Madera"];
-    } else if (selectRecinto == 9) {
+    } else if (selectRecinto == "Hall de Acceso") {
         var aspectoValorPicker = ["Seleccione", "Cielo", "Jardinera", "Porcelanato", "Puerta de Acceso"];
-    } else if (selectRecinto == 10) {
+    } else if (selectRecinto == "Hojalatería y Techumbre") {
         var aspectoValorPicker = ["Seleccione", "Bajadas de Agua", "Bajo Alero", "Canaletas", "Cubetas", "Hojalatería", "Planchas de Techumbre"];
-    } else if (selectRecinto == 11) {
+    } else if (selectRecinto == "Instalaciones") {
         var aspectoValorPicker = ["Seleccione", "Aguas Lluvia", "Calefon", "Gabinete Calefon", "Iluminación Hall de Acceso", "Llave de Jardín", "Medidor Agua Potable", "Medidor de Gas", "Medidor Eléctrico", "puntos Iluminación Patio",];
-    } else if (selectRecinto == 12) {
+    } else if (selectRecinto == "Living Comedor - Pasillo") {
         var aspectoValorPicker = ["Seleccione", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos", "Servicios (Electricidad)", "Ventanas",];
-    } else if (selectRecinto == 13) {
+    } else if (selectRecinto == "Pasillo de Acceso") {
         var aspectoValorPicker = ["Seleccione", "Cornisas", "Guardapolvos", "Pintura Cielos", "Pintura Muros", "Pisos",];
-    } else if (selectRecinto == 14) {
+    } else if (selectRecinto == "Patio") {
         var aspectoValorPicker = ["Seleccione", "Panderetas"];
-    } else if (selectRecinto == 15) {
+    } else if (selectRecinto == "Walk in Closet") {
         var aspectoValorPicker = ["Seleccione", "Cornisas", "Guardapolvos", "Muebles", "Pintura Cielos", "Pintura Muros", "Pisos",];
     } else {
         var aspectoValorPicker = ["Seleccione"];
@@ -294,9 +307,25 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
         <View>
             <ScrollView>
 
-                <View>
+                <View >
+                    <Modal
+                        animationType="slide"
+                        transparent={false}
+                        visible={modalVisible}
+                        onRequestClose={() => {
+                            Alert.alert("Guardando Registro, espere.");
+                        }}
+                    >
+                        <View style={styles.centeredView}>
+                            <View style={styles.modalView}>
+                                <Text style={styles.modalText}>Guardando Registro</Text>
+                                <Spinner color='white' style={{ marginTop: 10 }} size={90} />
 
-                    <Form>
+                            </View>
+                        </View>
+                    </Modal>
+
+                    <Form style={{backgroundColor:'#dae1e7',borderRadius:35,marginTop:10,marginBottom:10}}>
 
                         <Text style={styles.labelFormulario}>CASA:</Text>
                         <View style={{
@@ -344,21 +373,21 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                                 onValueChange={(itemValue, itemIndex) => getPickerRecinto(itemValue)}
                             >
                                 <Picker.Item label="Seleccione Recinto" value='' />
-                                <Picker.Item label="Antejardín" value="1" />
-                                <Picker.Item label="Baño Familiar" value="2" />
-                                <Picker.Item label="Baño Suite" value="3" />
-                                <Picker.Item label="Cocina" value="4" />
-                                <Picker.Item label="Dormitorio 1 Suite" value="5" />
-                                <Picker.Item label="Dormitorio 2" value="6" />
-                                <Picker.Item label="Dormitorio 3" value="7" />
-                                <Picker.Item label="Fachada Exterior " value="8" />
-                                <Picker.Item label="Hall de Acceso" value="9" />
-                                <Picker.Item label="Hojalatería y Techumbre" value="10" />
-                                <Picker.Item label="Instalaciones" value="11" />
-                                <Picker.Item label="Living Comedor - Pasillo" value="12" />
-                                <Picker.Item label="Pasillo de Acceso" value="13" />
-                                <Picker.Item label="Patio" value="14" />
-                                <Picker.Item label="Walk in Closet" value="15" />
+                                <Picker.Item label="Antejardín" value="Antejardín" />
+                                <Picker.Item label="Baño Familiar" value="Baño Familiar" />
+                                <Picker.Item label="Baño Suite" value="Baño Suite" />
+                                <Picker.Item label="Cocina" value="Cocina" />
+                                <Picker.Item label="Dormitorio 1 Suite" value="Dormitorio 1 Suite" />
+                                <Picker.Item label="Dormitorio 2" value="Dormitorio 2" />
+                                <Picker.Item label="Dormitorio 3" value="Dormitorio 3" />
+                                <Picker.Item label="Fachada Exterior " value="Fachada Exterior " />
+                                <Picker.Item label="Hall de Acceso" value="Hall de Acceso" />
+                                <Picker.Item label="Hojalatería y Techumbre" value="Hojalatería y Techumbre" />
+                                <Picker.Item label="Instalaciones" value="Instalaciones" />
+                                <Picker.Item label="Living Comedor - Pasillo" value="Living Comedor - Pasillo" />
+                                <Picker.Item label="Pasillo de Acceso" value="Pasillo de Acceso" />
+                                <Picker.Item label="Patio" value="Patio" />
+                                <Picker.Item label="Walk in Closet" value="Walk in Closet" />
                             </Picker>
                         </View>
                         <Text style={styles.labelFormulario}>ASPECTO A REVISAR:</Text>
@@ -413,13 +442,10 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                             marginLeft: 20,
                             marginRight: 20,
                         }} onChangeText={observationText => setObservation(observationText)} defaultValue={observationText} rowSpan={5} bordered placeholder="Ingrese observación" />
-                        <Button success onPress={foto} style={styles.botonFoto}><Text style={styles.textoFoto}>Elegir Foto <IconFont name="photo"></IconFont> </Text></Button>
+                        <Button success small onPress={foto} style={styles.botonFoto}><Text style={styles.textoFoto}>Elegir Foto <IconFont name="photo"></IconFont> </Text></Button>
                         {
                             fotoUrl.length == 0 ?
-                                <Text style={{
-                                    textAlign: 'center',
-                                    fontSize: 20
-                                }} >No Hay Imagen Elegida</Text> :
+                                null :
                                 <Image source={fotoUrl} style={styles.fotografia} />
                         }
                     </Form>
@@ -430,7 +456,7 @@ export default function Formulario({ guardarMostrarForm, setRegistroArray, regis
                 <Text style={styles.textAgregar}>Eliminar</Text>
             </Button> */}
                 </View>
-                <Button onPress={enviarFomulario} style={styles.botonAgregar} rounded primary>
+                <Button onPress={enviarFomulario} style={styles.botonAgregar} >
                     <Text style={styles.textAgregar}>Guardar</Text>
                 </Button>
             </ScrollView>
@@ -465,13 +491,14 @@ const styles = StyleSheet.create({
     //     marginLeft: 5
     // },
     botonAgregar: {
+        textAlign: 'center',
         marginTop: 10,
-        width: '50%',
-        height: '8%',
-        marginLeft: 86,
-        marginBottom: 40,
+        // width: '50%',
+        // height: '8%',
+        // marginLeft: 86,
+        // marginBottom: 40,
         justifyContent: 'center',
-
+        backgroundColor:'#2ec1ac'
     },
     botonFoto: {
         width: '50%',
@@ -509,6 +536,44 @@ const styles = StyleSheet.create({
 
         // borderColor:'blue'
     },
+    centeredView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 22,
+        backgroundColor:'#142850'
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: "#00909e",
+        borderRadius: 20,
+        padding: 35,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5
+    },
+    openButton: {
+        backgroundColor: "#F194FF",
+        borderRadius: 20,
+        padding: 10,
+        elevation: 2
+    },
+    textStyle: {
+        color: "white",
+        fontWeight: "bold",
+        textAlign: "center"
+    },
+    modalText: {
+        marginBottom: 15,
+        textAlign: "center",
+        color:'white'
+    }
     // inputForm: {
     //     marginTop: 10,
     //     height: 50,
