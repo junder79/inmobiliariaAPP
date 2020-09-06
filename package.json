@@ -28,7 +28,8 @@
     "react-navigation": "^4.4.0",
     "react-navigation-material-bottom-tabs": "^2.3.0",
     "react-navigation-stack": "^2.8.2",
-    "react-navigation-tabs": "^2.9.0"
+    "react-navigation-tabs": "^2.9.0",
+    "shortid": "^2.2.15"
   },
   "devDependencies": {
     "@babel/core": "7.10.3",
